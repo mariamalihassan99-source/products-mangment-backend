@@ -3,9 +3,16 @@ const Product = require('../modles/Product');
 
 async function createProduct(req, res) {
   try {
-    const product = new Product(req.body);
-    await product.save();
-    res.status(201).json(product);
+    const { title, description, category, price, quantity } = req.body;
+    const createdProduct = await Product.create({
+        title,
+        description,
+        category,
+        price,
+        quantity,
+        stockItems: quantity < 3 ? quantity : 0  // Set stockItems to quantity if it's less than 3, otherwise 0
+    });
+    res.status(201).json(createdProduct);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -34,11 +41,12 @@ async function getProductById(req, res) {
 
 async function updateProduct(req, res) {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-    if (!product) {
+    const {title, description, category, price, quantity } = req.body;
+    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, {title, description, category, price, quantity, stockItems: quantity < 3 ? quantity : 0}, { new: true, runValidators: true });
+    if (!updatedProduct) {
       return res.status(404).json({ error: 'Product not found' });
     }
-    res.json(product);
+    res.json(updatedProduct);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -66,13 +74,14 @@ async function getLowStockProducts(req, res) {
   }
 }
 
+
 async function getProductStatistics(req, res) {
   try {
     const totalProducts = await Product.countDocuments();
-    const totalQuantity = await Product.aggregate([
-      { $group: { _id: null, totalQuantity: { $sum: "$quantity" } } }
+    const totalQuantity = await Product.aggregate([ // Aggregate to sum up the total quantity of all products
+      { $group: { _id: null, totalQuantity: { $sum: "$quantity" } } } // Aggregate to sum up the total quantity of all products
     ]);
-    res.json({ totalProducts, totalQuantity: totalQuantity[0]?.totalQuantity || 0 });
+    res.json({ totalProducts, totalQuantity: totalQuantity[0]?.totalQuantity || 0 }); // Return total products and total quantity of all products
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
