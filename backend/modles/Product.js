@@ -33,9 +33,8 @@
      type: Number,
      default: 0
    } , 
-   lowStockItems: {
-     type: Boolean,
-     default: false,
+   stockItems: {
+     type: Number,
      min:[3, 'Low stock threshold is 3']
    }
  } , { timestamps: true } );

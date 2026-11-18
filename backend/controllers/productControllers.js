@@ -59,7 +59,7 @@ async function deleteProduct(req, res) {
 
 async function getLowStockProducts(req, res) {
   try {
-    const products = await Product.find({ lowStockItems: true });
+    const products = await Product.find({ quantity: { $lt: 3 } }); //$lt means less than 3, which is the low stock threshold
     res.json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
